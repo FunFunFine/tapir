@@ -1,6 +1,6 @@
 package sttp.tapir.server
 
-import sttp.model.StatusCode
+import sttp.model.{HeaderNames, StatusCode}
 import sttp.tapir.DecodeResult.Error.JsonDecodeException
 import sttp.tapir.DecodeResult.{Error, InvalidValue}
 import sttp.tapir._
@@ -50,16 +50,21 @@ object ServerDefaults {
       import sttp.tapir.server.{DefaultDecodeFailureResponse => fr}
 
       failingInput(ctx) match {
-        case _: EndpointInput.Query[_]             => Some(fr.status(StatusCode.BadRequest))
-        case _: EndpointInput.QueryParams[_]       => Some(fr.status(StatusCode.BadRequest))
-        case _: EndpointInput.Cookie[_]            => Some(fr.status(StatusCode.BadRequest))
-        case _: EndpointIO.Header[_]               => Some(fr.status(StatusCode.BadRequest))
-        case _: EndpointIO.Headers[_]              => Some(fr.status(StatusCode.BadRequest))
-        case _: EndpointIO.Body[_, _]              => Some(fr.status(StatusCode.BadRequest))
-        case _: EndpointIO.StreamBodyWrapper[_, _] => Some(fr.status(StatusCode.BadRequest))
+        case _: EndpointInput.Query[_]       => Some(fr.status(StatusCode.BadRequest))
+        case _: EndpointInput.QueryParams[_] => Some(fr.status(StatusCode.BadRequest))
+        case _: EndpointInput.Cookie[_]      => Some(fr.status(StatusCode.BadRequest))
+        case h: EndpointIO.Header[_] if ctx.failure.isInstanceOf[DecodeResult.Mismatch] && h.name == HeaderNames.ContentType =>
+          Some(fr.status(StatusCode.UnsupportedMediaType))
+        case _: EndpointIO.Header[_] => Some(fr.status(StatusCode.BadRequest))
+        case fh: EndpointIO.FixedHeader[_] if ctx.failure.isInstanceOf[DecodeResult.Mismatch] && fh.h.name == HeaderNames.ContentType =>
+          Some(fr.status(StatusCode.UnsupportedMediaType))
+        case _: EndpointIO.FixedHeader[_] => Some(fr.status(StatusCode.BadRequest))
+        case _: EndpointIO.Headers[_]     => Some(fr.status(StatusCode.BadRequest))
+        case _: EndpointIO.Body[_, _]     => Some(fr.status(StatusCode.BadRequest))
         // we assume that the only decode failure that might happen during path segment decoding is an error
         // a non-standard path decoder might return Missing/Multiple/Mismatch, but that would be indistinguishable from
         // a path shape mismatch
+        case _: EndpointIO.StreamBodyWrapper[_, _] => Some(fr.status(StatusCode.BadRequest))
         case _: EndpointInput.PathCapture[_]
             if (badRequestOnPathErrorIfPathShapeMatches && ctx.failure.isInstanceOf[DecodeResult.Error]) ||
               (badRequestOnPathInvalidIfPathShapeMatches && ctx.failure.isInstanceOf[DecodeResult.InvalidValue]) =>
