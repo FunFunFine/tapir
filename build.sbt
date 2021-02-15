@@ -330,7 +330,7 @@ lazy val json4s: ProjectMatrix = (projectMatrix in file("json/json4s"))
     name := "tapir-json-json4s",
     libraryDependencies ++= Seq(
       "org.json4s" %%% "json4s-core" % Versions.json4s,
-      "org.json4s" %%% "json4s-jackson" % Versions.json4s % Test,
+      "org.json4s" %%% "json4s-jackson" % Versions.json4s,
       scalaTest.value % Test
     )
   )
@@ -512,7 +512,7 @@ lazy val openapiDocs: ProjectMatrix = (projectMatrix in file("docs/openapi-docs"
     name := "tapir-openapi-docs"
   )
   .jvmPlatform(scalaVersions = allScalaVersions)
-  .dependsOn(openapiModel, core, apispecDocs, tests % Test, openapiCirceYaml % Test)
+  .dependsOn(openapiModel, core, apispecDocs, tests % Test, openapiCirceYaml % Test, json4s % Test, playJson % Test, sprayJson % Test)
 
 lazy val asyncapiDocs: ProjectMatrix = (projectMatrix in file("docs/asyncapi-docs"))
   .settings(commonJvmSettings)

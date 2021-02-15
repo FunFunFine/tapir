@@ -908,6 +908,70 @@ class VerifyYamlTest extends AnyFunSuite with Matchers {
     actualYamlNoIndent shouldBe expectedYaml
   }
 
+  test("should match the expected yaml for circe json value") {
+
+    import io.circe.Json
+    import sttp.tapir.json.circe._
+
+    val expectedYaml = load("expected_circe_json_value.yml")
+
+    val e = endpoint.in(jsonBody[Json])
+
+    val actualYaml = OpenAPIDocsInterpreter.toOpenAPI(e, Info("Examples", "1.0")).toYaml
+    val actualYamlNoIndent = noIndentation(actualYaml)
+
+    actualYamlNoIndent shouldBe expectedYaml
+  }
+
+  test("should match the expected yaml for json4s json value") {
+
+    import org.json4s._
+    import sttp.tapir.json.json4s._
+
+    implicit val formats: Formats = org.json4s.jackson.Serialization.formats(NoTypeHints)
+    implicit val serialization: Serialization = org.json4s.jackson.Serialization
+
+    val expectedYaml = load("expected_json4s_json_value.yml")
+
+    val e = endpoint.in(jsonBody[JValue])
+
+    val actualYaml = OpenAPIDocsInterpreter.toOpenAPI(e, Info("Examples", "1.0")).toYaml
+    val actualYamlNoIndent = noIndentation(actualYaml)
+
+    actualYamlNoIndent shouldBe expectedYaml
+  }
+
+  test("should match the expected yaml for spray json value") {
+
+    import spray.json._
+    import DefaultJsonProtocol._
+    import sttp.tapir.json.spray._
+
+    val expectedYaml = load("expected_spray_json_value.yml")
+
+    val e = endpoint.in(jsonBody[spray.json.JsValue])
+
+    val actualYaml = OpenAPIDocsInterpreter.toOpenAPI(e, Info("Examples", "1.0")).toYaml
+    val actualYamlNoIndent = noIndentation(actualYaml)
+
+    actualYamlNoIndent shouldBe expectedYaml
+  }
+
+  test("should match the expected yaml for play json value") {
+
+    import play.api.libs.json._
+    import sttp.tapir.json.play._
+
+    val expectedYaml = load("expected_spray_json_value.yml")
+
+    val e = endpoint.in(jsonBody[JsValue])
+
+    val actualYaml = OpenAPIDocsInterpreter.toOpenAPI(e, Info("Examples", "1.0")).toYaml
+    val actualYamlNoIndent = noIndentation(actualYaml)
+
+    actualYamlNoIndent shouldBe expectedYaml
+  }
+
   test("exclusive bounds") {
     val expectedYaml = load("expected_exclusive_bounds.yml")
 
